@@ -23,6 +23,7 @@ import shutil
 import SimpleITK as sitk
 
 from external_lib.MedCommon.utils.data_io_utils import DataIO
+from external_lib.MedCommon.utils.image_postprocessing_utils import ImagePostProcessingUtils
 
 
 def step_1_check_folder_format(root, out_root):
@@ -186,6 +187,34 @@ def cerebral_parenchyma_segmentation_new_algo(
         sitk.WriteImage(image, out_cta_file)
         sitk.WriteImage(pred_mask, out_cta_mask_file)  
 
+def step_3_3_segment_cerebral_parenchyma_connected_region(root_dir = '/data/medical/cardiac/cta2mbf/20201216/3.sorted_mask'):
+    # root_dir = '/data/medical/cardiac/cta2mbf/20201216/3.sorted_mask'
+    for pid in tqdm(os.listdir(root_dir)):
+        pid_path = os.path.join(root_dir, pid)
+        if not os.path.isdir(pid_path):
+            continue
+        cta_root = os.path.join(pid_path, 'CTA')
+        
+        in_cta_file = os.path.join(cta_root, 'CTA_MASK.nii.gz')
+        out_cta_file = os.path.join(cta_root, 'CTA_MASK_connected.nii.gz')
+
+        try:
+            if os.path.isfile(in_cta_file):
+                in_mask = sitk.ReadImage(in_cta_file)
+                out_mask_sitk = ImagePostProcessingUtils.get_maximal_connected_region_multilabel(in_mask, mask_labels=[1])
+                sitk.WriteImage(out_mask_sitk, out_cta_file)
+        except Exception as e:
+            print(e)
+            print('====> Error case:\t{}'.format(pid))
+
+def extract_cta_cerebral_parenchyma_zlayers(
+        cta_root, 
+        mask_root, 
+        cta_pattern = 'CTA/CTA.nii.gz', 
+        mask_pattern = 'CTA/CTA_MASK_connected.nii.gz'):
+    pids = os.listdir(mask_root)
+    for pid in tqdm(pids):
+        
 
 def data_preprocessing():
     data_root = '/data/medical/brain/gan/cta2dwi_multi_classified'
@@ -193,10 +222,16 @@ def data_preprocessing():
     # step_2_dcm_to_nii(os.path.join(data_root, '0.ori'), 
     #     os.path.join(data_root, '3.sorted_nii'))
 
-    cerebral_parenchyma_segmentation_new_algo(
-        os.path.join(data_root, '3.sorted_nii'), 
-        os.path.join(data_root, '3.sorted_mask')
-    )
+    # step 3 cerebral parenchyma segmentation
+    # cerebral_parenchyma_segmentation_new_algo(
+    #     os.path.join(data_root, '3.sorted_nii'), 
+    #     os.path.join(data_root, '3.sorted_mask')
+    # )
+    # step_3_3_segment_cerebral_parenchyma_connected_region(
+    #     os.path.join(data_root, '3.sorted_mask')
+    # )
+
+
 
 
 if __name__ == '__main__':
