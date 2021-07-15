@@ -16,6 +16,19 @@
             },
             "args": [
             ]
-        },        
+        },      
+        {
+            "name": "cta2dwi data preprocessing registration",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "cwd": "/home/zhangwd/code/pkg/SimpleElastix/build/SimpleITK-build/Wrapping/Python",
+            "env": {
+                "CUDA_VISIBLE_DEVICES": "0"
+            },
+            "args": [
+            ]
+        },    
     ]
 }
