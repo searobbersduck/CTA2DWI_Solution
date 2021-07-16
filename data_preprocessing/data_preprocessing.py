@@ -22,6 +22,7 @@ from glob import glob
 import shutil
 import SimpleITK as sitk
 import numpy as np
+import shutil
 
 from external_lib.MedCommon.utils.data_io_utils import DataIO
 from external_lib.MedCommon.utils.image_postprocessing_utils import ImagePostProcessingUtils
@@ -205,7 +206,7 @@ def step_3_3_segment_cerebral_parenchyma_connected_region(root_dir = '/data/medi
             if os.path.isfile(in_cta_file):
                 in_mask = sitk.ReadImage(in_cta_file)
                 out_mask_sitk = ImagePostProcessingUtils.get_maximal_connected_region_multilabel(in_mask, mask_labels=[1])
-                out_mask_sitk = MaskUtils.fill_hole(out_mask_sitk)
+                out_mask_sitk = MaskUtils.fill_hole(out_mask_sitk, radius=4)
                 sitk.WriteImage(out_mask_sitk, out_cta_file)
         except Exception as e:
             print(e)
@@ -316,6 +317,28 @@ def merge_cerebral_parenchyma_mask_and_dwi_bbox(
             print(e)
             print('====> Error case:\t{}'.format(pid))
 
+def copy_train_data(data_root, out_root, cta_pattern='fixed_cta.nii.gz'):
+    '''
+    很多数据的分辨率太低，将能达到要求的数据copy到另外的文件夹
+    '''
+    os.makedirs(out_root, exist_ok=True)
+    min_z = 10000
+    max_z = 0
+    for pid in tqdm(os.listdir(data_root)):
+        cta_file = os.path.join(data_root, pid, cta_pattern)
+        cta_image = sitk.ReadImage(cta_file)
+        size = cta_image.GetSize()
+        print('{}\t{}'.format(pid, size))
+        if size[2] < 100:
+            continue
+        if min_z > size[2]:
+            min_z = size[2]
+        if max_z < size[2]:
+            max_z = size[2]
+        src_file = os.path.join(data_root, pid)
+        dst_file = os.path.join(out_root, pid)
+        shutil.copytree(src_file, dst_file)
+    print('min z:\t{},\t\tmax z:\t{}'.format(min_z, max_z))
 
 def data_preprocessing():
     data_root = '/data/medical/brain/gan/cta2dwi_multi_classified'
@@ -328,15 +351,15 @@ def data_preprocessing():
     #     os.path.join(data_root, '3.sorted_nii'), 
     #     os.path.join(data_root, '3.sorted_mask')
     # )
-    step_3_3_segment_cerebral_parenchyma_connected_region(
-        os.path.join(data_root, '3.sorted_mask')
-    )
+    # step_3_3_segment_cerebral_parenchyma_connected_region(
+    #     os.path.join(data_root, '3.sorted_mask')
+    # )
 
-    extract_cta_cerebral_parenchyma_zlayers(
-        os.path.join(data_root, '3.sorted_mask'), 
-        os.path.join(data_root, '3.sorted_mask'), 
-        os.path.join(data_root, '4.cropped_nii')
-    )
+    # extract_cta_cerebral_parenchyma_zlayers(
+    #     os.path.join(data_root, '3.sorted_mask'), 
+    #     os.path.join(data_root, '3.sorted_mask'), 
+    #     os.path.join(data_root, '4.cropped_nii')
+    # )
 
     # generate_dwi_bbox_mask(
     #     os.path.join(data_root, '3.sorted_nii'),
@@ -345,17 +368,22 @@ def data_preprocessing():
 
     # registration : run data_preprocessing_registration_dwi2cta.py
 
-    extract_dwi_cerebral_parenchyma(
-        os.path.join(data_root, '4.registration_batch'), 
-        os.path.join(data_root, '4.cropped_nii'), 
-        os.path.join(data_root, '4.registration_batch')
-    )
+    # extract_dwi_cerebral_parenchyma(
+    #     os.path.join(data_root, '4.registration_batch'), 
+    #     os.path.join(data_root, '4.cropped_nii'), 
+    #     os.path.join(data_root, '4.registration_batch')
+    # )
 
-    merge_cerebral_parenchyma_mask_and_dwi_bbox(
-        os.path.join(data_root, '4.cropped_nii'), 
-        os.path.join(data_root, '4.registration_batch'), 
-        os.path.join(data_root, '4.registration_batch')
-    )
+    # merge_cerebral_parenchyma_mask_and_dwi_bbox(
+    #     os.path.join(data_root, '4.cropped_nii'), 
+    #     os.path.join(data_root, '4.registration_batch'), 
+    #     os.path.join(data_root, '4.registration_batch')
+    # )
+
+    copy_train_data(
+            os.path.join(data_root, '4.registration_batch'), 
+            os.path.join(data_root, '5.train_batch')
+        )
 
 
 
