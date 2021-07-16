@@ -17,7 +17,7 @@ train.py \
 --norm batch \
 --display_server='10.100.37.100' \
 --display_port=8901 \
---display_id=0 \
+--display_id=1 \
 --lambda_L1=1 \
 --n_epochs=500 \
 --display_freq=10 \
@@ -36,5 +36,5 @@ train.py \
 --no_discriminator \
 --ssl_sr \
 --ssl_arch resnet10 \
---ssl_pretrained_file /data/medical/brain/gan/cta2dwi_multi_classified/ssl/ \
+--ssl_pretrained_file /data/medical/brain/gan/cta2dwi_multi_classified/ssl/checkpoint_3140.pth.tar \
 --continue_train
