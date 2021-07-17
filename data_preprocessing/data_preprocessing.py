@@ -386,10 +386,79 @@ def data_preprocessing():
         )
 
 
+def convert_dcm_to_nii_history(in_root, out_root):
+    pids = os.listdir(in_root)
+    for pid in tqdm(pids):
+        try:
+            out_sub_root = os.path.join(out_root, pid)
+            os.makedirs(out_sub_root, exist_ok=True)
+
+            patient_path = os.path.join(in_root, pid, 'NCCT')
+            suid = os.listdir(patient_path)[0]
+            cta_path = os.path.join(patient_path, suid)
+            cta_image = DataIO.load_dicom_series(cta_path)
+            out_cta_file = os.path.join(out_sub_root, 'CTA.nii.gz')
+            sitk.WriteImage(cta_image['sitk_image'], out_cta_file)
+
+            patient_path = os.path.join(in_root, pid, 'DWI')
+            suid = os.listdir(patient_path)[0]
+            dwi_path = os.path.join(patient_path, suid, 'bxxx')
+            dwi_image = DataIO.load_dicom_series(dwi_path)
+            out_dwi_file = os.path.join(out_sub_root, 'DWI.nii.gz')
+            sitk.WriteImage(dwi_image['sitk_image'], out_dwi_file)  
+        except Exception as e:
+            print('====> Error case:\t', pid)
+            continue    
+
+def data_preprocessing_batch1():
+    data_root = '/data/medical/brain/gan/cta2dwi_history_pos'
+
+    convert_dcm_to_nii_history(os.path.join(data_root, '0.raw_dcm'), 
+        os.path.join(data_root, '3.sorted_nii'))
+
+    # step 3 cerebral parenchyma segmentation
+    # cerebral_parenchyma_segmentation_new_algo(
+    #     os.path.join(data_root, '3.sorted_nii'), 
+    #     os.path.join(data_root, '3.sorted_mask')
+    # )
+    # step_3_3_segment_cerebral_parenchyma_connected_region(
+    #     os.path.join(data_root, '3.sorted_mask')
+    # )
+
+    # extract_cta_cerebral_parenchyma_zlayers(
+    #     os.path.join(data_root, '3.sorted_mask'), 
+    #     os.path.join(data_root, '3.sorted_mask'), 
+    #     os.path.join(data_root, '4.cropped_nii')
+    # )
+
+    # generate_dwi_bbox_mask(
+    #     os.path.join(data_root, '3.sorted_nii'),
+    #     os.path.join(data_root, '4.cropped_nii')
+    # )
+
+    # registration : run data_preprocessing_registration_dwi2cta.py
+
+    # extract_dwi_cerebral_parenchyma(
+    #     os.path.join(data_root, '4.registration_batch'), 
+    #     os.path.join(data_root, '4.cropped_nii'), 
+    #     os.path.join(data_root, '4.registration_batch')
+    # )
+
+    # merge_cerebral_parenchyma_mask_and_dwi_bbox(
+    #     os.path.join(data_root, '4.cropped_nii'), 
+    #     os.path.join(data_root, '4.registration_batch'), 
+    #     os.path.join(data_root, '4.registration_batch')
+    # )
+
+    # copy_train_data(
+    #         os.path.join(data_root, '4.registration_batch'), 
+    #         os.path.join(data_root, '5.train_batch')
+    #     )
 
 
 if __name__ == '__main__':
     # step_1_check_folder_format('/data/medical/brain/gan/hospital_6_multi_classified/CTA2DWI-多中心-20201102', 
     #     '/data/medical/brain/gan/cta2dwi_multi_classified')
 
-    data_preprocessing()
+    # data_preprocessing()
+    data_preprocessing_batch1()
