@@ -28,7 +28,53 @@ from external_lib.MedCommon.utils.data_io_utils import DataIO
 from external_lib.MedCommon.utils.image_postprocessing_utils import ImagePostProcessingUtils
 from external_lib.MedCommon.utils.mask_bounding_utils import MaskBoundingUtils
 from external_lib.MedCommon.utils.mask_utils import MaskUtils
+from external_lib.MedCommon.utils.image_show_utils import ImageShowUtils
 
+error_list = [
+    '4409402',
+    '4623558',
+    '4825713',
+    '5007511',
+    '5101568',
+    '1237062',
+    '1285440',
+    '1305155',
+    '1397046',
+    '1445543',
+    '1902661',
+    '1935168',
+    '2094368',
+    '2182657',
+    '2504214',
+    '2602401',
+    '2670896',
+    '2693475',
+    '2813431',
+    '2835569',
+    '2999343',
+    '3772244',
+    '3839904',
+    '3869885',
+    '3949254',
+    '3998837',
+    '4185501',
+    '4303024',
+    '4381668',
+    '4409402',
+    '4440093',
+    '4465419',
+    '4577418',
+    '4587103',
+    '4479986',
+    '4455178',
+    '4238407',
+    '4285331',
+    '4503839',
+    '4597717',
+    '4634411',
+    '4669297',
+    '4981609'
+]
 
 def step_1_check_folder_format(root, out_root):
     '''
@@ -206,7 +252,7 @@ def step_3_3_segment_cerebral_parenchyma_connected_region(root_dir = '/data/medi
             if os.path.isfile(in_cta_file):
                 in_mask = sitk.ReadImage(in_cta_file)
                 out_mask_sitk = ImagePostProcessingUtils.get_maximal_connected_region_multilabel(in_mask, mask_labels=[1])
-                out_mask_sitk = MaskUtils.fill_hole(out_mask_sitk, radius=4)
+                out_mask_sitk = MaskUtils.fill_hole(out_mask_sitk, radius=6)
                 sitk.WriteImage(out_mask_sitk, out_cta_file)
         except Exception as e:
             print(e)
@@ -217,7 +263,7 @@ def extract_cta_cerebral_parenchyma_zlayers(
         mask_root, 
         out_root,
         cta_pattern = 'CTA/CTA.nii.gz', 
-        mask_pattern = 'CTA/CTA_MASK_connected.nii.gz'):
+        mask_pattern = 'CTA/DWI_BBOX_MASK.nii.gz'):
     pids = os.listdir(mask_root)
     for pid in tqdm(pids):
         cta_file = os.path.join(cta_root, pid, cta_pattern)
@@ -232,24 +278,57 @@ def extract_cta_cerebral_parenchyma_zlayers(
         out_mask_file = os.path.join(out_dir, 'MASK.nii.gz')
         sitk.WriteImage(out_mask, out_mask_file)
 
+
+def extract_cta_cerebral_parenchyma(
+        cta_root, 
+        mask_root, 
+        out_root, 
+        cta_pattern = 'CTA.nii.gz', 
+        mask_pattern = 'MASK.nii.gz', 
+        out_pattern = 'CTA_parenchyma.nii.gz'
+    ):
+    pids = os.listdir(mask_root)
+    for pid in tqdm(pids):
+        try:
+            cta_file = os.path.join(cta_root, pid, cta_pattern)
+            mask_file = os.path.join(mask_root, pid, mask_pattern)
+            out_file = os.path.join(out_root, pid, out_pattern)
+            in_image = sitk.ReadImage(cta_file)
+            in_mask = sitk.ReadImage(mask_file)
+            out_image = ImagePostProcessingUtils.extract_region_by_mask(in_image, in_mask, default_value=-1024, mask_label=1)
+            sitk.WriteImage(out_image, out_file)
+        except Exception as e:
+            print('====> Error case:\t{}'.format(pid))
+            print(e)
+            pass
+
+
+
+
 def generate_dwi_bbox_mask(in_root, out_root, dwi_pattern='DWI.nii.gz', out_dwi_mask_pattern='DWI_BBOX_MASK.nii.gz'):
     for pid in tqdm(os.listdir(in_root)):
-        dwi_file = os.path.join(in_root, pid, dwi_pattern)
-        dwi_image = sitk.ReadImage(dwi_file)
-        size = dwi_image.GetSize()
-        size = size[::-1]
-        bbox_mask_arr = np.ones(size, dtype=np.uint8)
-        bbox_mask = sitk.GetImageFromArray(bbox_mask_arr)
-        bbox_mask.CopyInformation(dwi_image)
-        out_sub_dir = os.path.join(out_root, pid)
-        os.makedirs(out_sub_dir, exist_ok=True)
-        out_mask_file = os.path.join(out_sub_dir, out_dwi_mask_pattern)
-        sitk.WriteImage(bbox_mask, out_mask_file)
-        # copy dwi文件到指定路径，方便后续操作
-        src_file = dwi_file
-        dst_file = os.path.join(out_sub_dir, os.path.basename(src_file))
-        shutil.copyfile(src_file, dst_file)
-        print('hello world!')
+        try:
+            dwi_file = os.path.join(in_root, pid, dwi_pattern)
+            dwi_image = sitk.ReadImage(dwi_file)
+            size = dwi_image.GetSize()
+            size = size[::-1]
+            bbox_mask_arr = np.ones(size, dtype=np.uint8)
+            bbox_mask = sitk.GetImageFromArray(bbox_mask_arr)
+            bbox_mask.CopyInformation(dwi_image)
+            out_sub_dir = os.path.join(out_root, pid)
+            os.makedirs(out_sub_dir, exist_ok=True)
+            out_mask_file = os.path.join(out_sub_dir, out_dwi_mask_pattern)
+            sitk.WriteImage(bbox_mask, out_mask_file)
+            # copy dwi文件到指定路径，方便后续操作
+            src_file = dwi_file
+            dst_file = os.path.join(out_sub_dir, os.path.basename(src_file))
+            shutil.copyfile(src_file, dst_file)
+            print('hello world!')
+        except Exception as e:
+            print(e)
+            continue
+
+
 
 def extract_dwi_cerebral_parenchyma(
         dwi_root, 
@@ -340,6 +419,30 @@ def copy_train_data(data_root, out_root, cta_pattern='fixed_cta.nii.gz'):
         shutil.copytree(src_file, dst_file)
     print('min z:\t{},\t\tmax z:\t{}'.format(min_z, max_z))
 
+
+# 生成切面图像
+def genereate_mpr_slice(data_root, out_root, 
+        src_pattern='fixed_cta.nii.gz', 
+        dst_pattern='registried_dwi.nii.gz'
+    ):
+    for pid in tqdm(os.listdir(data_root)):
+        try:
+            src_image_file = os.path.join(data_root, pid, src_pattern)
+            dst_image_file = os.path.join(data_root, pid, dst_pattern)
+            # out_sub_root = os.path.join(out_root, pid)
+            out_sub_root = out_root
+            os.makedirs(out_sub_root, exist_ok=True)
+            out_src_prefix = '{}_src'.format(pid)
+            out_dst_prefix = '{}_dst'.format(pid)
+            src_image = sitk.ReadImage(src_image_file)
+            dst_image = sitk.ReadImage(dst_image_file)
+            ImageShowUtils.save_volume_to_mpr_jpg(src_image, out_sub_root, 150, 50, out_src_prefix)
+            ImageShowUtils.save_volume_to_mpr_jpg(dst_image, out_sub_root, 400, 200, out_dst_prefix)
+        except Exception as e:
+            print('====> Error case:\t{}'.format(pid))
+            pass
+
+
 def data_preprocessing():
     data_root = '/data/medical/brain/gan/cta2dwi_multi_classified'
 
@@ -410,50 +513,171 @@ def convert_dcm_to_nii_history(in_root, out_root):
             print('====> Error case:\t', pid)
             continue    
 
+
+# def data_preprocessing_batch1():
+#     data_root = '/data/medical/brain/gan/cta2dwi_history_pos'
+#     # data_root = '/data/medical/brain/gan/cta2dwi_history_neg'
+
+#     # convert_dcm_to_nii_history(os.path.join(data_root, '0.raw_dcm'), 
+#     #     os.path.join(data_root, '3.sorted_nii'))
+#     # convert_dcm_to_nii_history(os.path.join(data_root, '0.raw_dcm_neg'), 
+#     #     os.path.join(data_root, '3.sorted_nii'))
+
+#     # '''
+#     # deleted algo
+#     # '''
+#     # # step 3 cerebral parenchyma segmentation
+#     # # cerebral_parenchyma_segmentation_new_algo(
+#     # #     os.path.join(data_root, '3.sorted_nii'), 
+#     # #     os.path.join(data_root, '3.sorted_mask')
+#     # # )
+#     # # step_3_3_segment_cerebral_parenchyma_connected_region(
+#     # #     os.path.join(data_root, '3.sorted_mask')
+#     # # )
+
+#     # # extract_cta_cerebral_parenchyma_zlayers(
+#     # #     os.path.join(data_root, '3.sorted_mask'), 
+#     # #     os.path.join(data_root, '3.sorted_mask'), 
+#     # #     os.path.join(data_root, '4.cropped_nii')
+#     # # )
+
+#     # # generate_dwi_bbox_mask(
+#     # #     os.path.join(data_root, '3.sorted_nii'),
+#     # #     os.path.join(data_root, '4.cropped_nii')
+#     # # )
+    
+    
+#     # generate_dwi_bbox_mask(
+#     #     os.path.join(data_root, '3.sorted_nii'),
+#     #     os.path.join(data_root, '3.sorted_mask')
+#     # )
+    
+
+#     # extract_cta_cerebral_parenchyma(
+#     #     os.path.join(data_root, '4.cropped_nii'), 
+#     #     os.path.join(data_root, '4.cropped_nii'), 
+#     #     os.path.join(data_root, '4.cropped_nii'), 
+#     # )
+
+#     # registration : run data_preprocessing_registration_dwi2cta.py
+
+#     # extract_dwi_cerebral_parenchyma(
+#     #     os.path.join(data_root, '4.registration_batch'), 
+#     #     os.path.join(data_root, '4.cropped_nii'), 
+#     #     os.path.join(data_root, '4.registration_batch')
+#     # )
+
+
+#     extract_dwi_cerebral_parenchyma(
+#         os.path.join(data_root, '4.registration_batch_2d'), 
+#         os.path.join(data_root, '3.sorted_mask'), 
+#         os.path.join(data_root, '4.registration_batch_2d'), 
+#         mask_pattern='_brain_mask.nii.gz'
+#     )
+
+#     # merge_cerebral_parenchyma_mask_and_dwi_bbox(
+#     #     os.path.join(data_root, '4.cropped_nii'), 
+#     #     os.path.join(data_root, '4.registration_batch'), 
+#     #     os.path.join(data_root, '4.registration_batch')
+#     # )
+
+#     # copy_train_data(
+#     #         os.path.join(data_root, '4.registration_batch'), 
+#     #         os.path.join(data_root, '5.train_batch')
+#     #     )
+
+#     # genereate_mpr_slice(
+#     #         os.path.join(data_root, '5.train_batch'), 
+#     #         os.path.join(data_root, '6.mpr')
+#     #     )
+
+
 def data_preprocessing_batch1():
     data_root = '/data/medical/brain/gan/cta2dwi_history_pos'
+    # data_root = '/data/medical/brain/gan/cta2dwi_history_neg'
 
-    convert_dcm_to_nii_history(os.path.join(data_root, '0.raw_dcm'), 
-        os.path.join(data_root, '3.sorted_nii'))
-
-    # step 3 cerebral parenchyma segmentation
-    # cerebral_parenchyma_segmentation_new_algo(
-    #     os.path.join(data_root, '3.sorted_nii'), 
-    #     os.path.join(data_root, '3.sorted_mask')
-    # )
-    # step_3_3_segment_cerebral_parenchyma_connected_region(
-    #     os.path.join(data_root, '3.sorted_mask')
-    # )
-
-    # extract_cta_cerebral_parenchyma_zlayers(
-    #     os.path.join(data_root, '3.sorted_mask'), 
-    #     os.path.join(data_root, '3.sorted_mask'), 
-    #     os.path.join(data_root, '4.cropped_nii')
-    # )
-
+    # step 1
+    # convert_dcm_to_nii_history(os.path.join(data_root, '0.raw_dcm'), 
+    #     os.path.join(data_root, '3.sorted_nii'))
+    # convert_dcm_to_nii_history(os.path.join(data_root, '0.raw_dcm_neg'), 
+    #     os.path.join(data_root, '3.sorted_nii'))
+    
+    # step 2
+    # segment by 2d algorithm
+    
+    # step 3
     # generate_dwi_bbox_mask(
     #     os.path.join(data_root, '3.sorted_nii'),
-    #     os.path.join(data_root, '4.cropped_nii')
+    #     os.path.join(data_root, '3.sorted_mask')
     # )
+    
 
+    # step 4
     # registration : run data_preprocessing_registration_dwi2cta.py
 
+    # step 5
     # extract_dwi_cerebral_parenchyma(
-    #     os.path.join(data_root, '4.registration_batch'), 
-    #     os.path.join(data_root, '4.cropped_nii'), 
-    #     os.path.join(data_root, '4.registration_batch')
+    #     os.path.join(data_root, '4.registration_batch_2d'), 
+    #     os.path.join(data_root, '3.sorted_mask'), 
+    #     os.path.join(data_root, '4.registration_batch_2d'), 
+    #     mask_pattern='_brain_mask.nii.gz'
     # )
 
+    # step 6
     # merge_cerebral_parenchyma_mask_and_dwi_bbox(
-    #     os.path.join(data_root, '4.cropped_nii'), 
-    #     os.path.join(data_root, '4.registration_batch'), 
-    #     os.path.join(data_root, '4.registration_batch')
+    #     os.path.join(data_root, '3.sorted_mask'), 
+    #     os.path.join(data_root, '4.registration_batch_2d'), 
+    #     os.path.join(data_root, '4.registration_batch_2d'), 
+    #     parenchyma_mask_pattern='_brain_mask.nii.gz'
     # )
 
+    # step 7
     # copy_train_data(
-    #         os.path.join(data_root, '4.registration_batch'), 
-    #         os.path.join(data_root, '5.train_batch')
+    #         os.path.join(data_root, '4.registration_batch_2d'), 
+    #         os.path.join(data_root, '5.train_batch_2d')
     #     )
+
+    # step 8
+    # genereate_mpr_slice(
+    #         os.path.join(data_root, '5.train_batch_2d'), 
+    #         os.path.join(data_root, '6.mpr_2d')
+    #     )
+
+    # step 5
+    extract_dwi_cerebral_parenchyma(
+        os.path.join(data_root, '4.registration_batch_2d_parenchyma'), 
+        os.path.join(data_root, '3.sorted_mask'), 
+        os.path.join(data_root, '4.registration_batch_2d_parenchyma'), 
+        mask_pattern='_brain_mask.nii.gz'
+    )
+
+    # step 6
+    merge_cerebral_parenchyma_mask_and_dwi_bbox(
+        os.path.join(data_root, '3.sorted_mask'), 
+        os.path.join(data_root, '4.registration_batch_2d_parenchyma'), 
+        os.path.join(data_root, '4.registration_batch_2d_parenchyma'), 
+        parenchyma_mask_pattern='_brain_mask.nii.gz'
+    )
+
+    # step 7
+    copy_train_data(
+            os.path.join(data_root, '4.registration_batch_2d_parenchyma'), 
+            os.path.join(data_root, '5.train_batch_2d_parenchyma')
+        )
+
+    # step 8
+    genereate_mpr_slice(
+            os.path.join(data_root, '5.train_batch_2d_parenchyma'), 
+            os.path.join(data_root, '6.mpr_2d_parenchyma')
+        )
+
+
+def remove_error_pairs(data_root):
+    for pid in tqdm(os.listdir(data_root)):
+        patient_path = os.path.join(data_root, pid)
+        if pid not in error_list:
+            continue
+        shutil.rmtree(patient_path)
 
 
 if __name__ == '__main__':
@@ -461,4 +685,5 @@ if __name__ == '__main__':
     #     '/data/medical/brain/gan/cta2dwi_multi_classified')
 
     # data_preprocessing()
-    data_preprocessing_batch1()
+    # data_preprocessing_batch1()
+    remove_error_pairs('/data/medical/brain/gan/cta2dwi_all_2d_parenchyma/5.train_batch_2d_parenchyma')

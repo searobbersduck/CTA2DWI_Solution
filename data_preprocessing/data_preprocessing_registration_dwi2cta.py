@@ -76,6 +76,52 @@ def elastix_register_images_one_case(cta_file, dwi_file, dwi_bbox_file, out_dir,
     sitk.WriteImage(moved_dwi_img, out_registried_dwi_file)
     sitk.WriteImage(moved_dwi_bbox_img, out_registried_dwi_bbox_file)
 
+
+def elastix_register_images_parenchyma_one_case(parenchyma_file, cta_file, dwi_file, dwi_bbox_file, out_dir, is_dcm=False):
+    parenchyma_data = DataIO.load_nii_image(parenchyma_file)
+    cta_data = DataIO.load_nii_image(cta_file)
+    dwi_data = DataIO.load_nii_image(dwi_file)
+    dwi_bbox_data = DataIO.load_nii_image(dwi_bbox_file)
+
+    parenchyma_img = parenchyma_data['sitk_image']
+    cta_img = cta_data['sitk_image']
+    dwi_img = dwi_data['sitk_image']
+    dwi_bbox_img = dwi_bbox_data['sitk_image']
+
+    # cta_img.SetOrigin([0,0,0])
+
+    dwi_img.SetOrigin(parenchyma_img.GetOrigin())
+    dwi_bbox_img.SetOrigin(parenchyma_img.GetOrigin())
+
+    selx = sitk.ElastixImageFilter()
+    print(parenchyma_img.GetSize())
+    print(dwi_img.GetSize())
+    selx.SetFixedImage(parenchyma_img)
+    selx.SetMovingImage(dwi_img)
+    selx.SetParameterMap(selx.GetDefaultParameterMap('rigid'))
+    selx.Execute()
+
+    moved_dwi_img = sitk.Transformix(dwi_img, selx.GetTransformParameterMap())
+    moved_dwi_img.CopyInformation(cta_img)
+    moved_dwi_bbox_img = sitk.Transformix(dwi_bbox_img, selx.GetTransformParameterMap())
+    moved_dwi_bbox_img.CopyInformation(cta_img)
+
+    os.makedirs(out_dir, exist_ok=True)
+    out_cta_file = os.path.join(out_dir, 'fixed_cta.nii.gz')
+    out_parenchyma_file = os.path.join(out_dir, 'fixed_parencyma.nii.gz')
+    out_registried_dwi_file = os.path.join(out_dir, 'registried_dwi.nii.gz')
+    out_registried_dwi_bbox_file = os.path.join(out_dir, 'registried_dwi_bbox.nii.gz')   
+
+
+    print('{}:\t{}'.format(out_registried_dwi_file, moved_dwi_img.GetSize()))
+    print('{}:\t{}'.format(out_registried_dwi_bbox_file, moved_dwi_bbox_img.GetSize()))
+
+    sitk.WriteImage(cta_img, out_cta_file)
+    sitk.WriteImage(parenchyma_img, out_parenchyma_file)
+    sitk.WriteImage(moved_dwi_img, out_registried_dwi_file)
+    sitk.WriteImage(moved_dwi_bbox_img, out_registried_dwi_bbox_file)
+
+
 def test_elastix_register_images_one_case():
     pid = '4730391'
     data_root = '/data/medical/brain/gan/cta2dwi_multi_classified/4.cropped_nii'
@@ -98,12 +144,15 @@ def elastix_register_images_single_task(data_root, out_dir, pids, task_id):
     for pid in tqdm(pids):
         try:
             pid_path = os.path.join(data_root, pid)
-            cta_file = os.path.join(pid_path, 'CTA.nii.gz')
+            # cta_file = os.path.join(pid_path, 'CTA.nii.gz')
+            cta_file = os.path.join(pid_path, '_NCCT_crop.nii.gz')
+            parenchyma_file = os.path.join(pid_path, '_brain.nii.gz')
             dwi_file = os.path.join(pid_path, 'DWI.nii.gz')
             dwi_bbox_file = os.path.join(pid_path, 'DWI_BBOX_MASK.nii.gz')
             out_pid_dir = os.path.join(out_dir, pid)
 
-            elastix_register_images_one_case(cta_file, dwi_file, dwi_bbox_file, out_pid_dir, False)
+            # elastix_register_images_one_case(cta_file, dwi_file, dwi_bbox_file, out_pid_dir, False)
+            elastix_register_images_parenchyma_one_case(parenchyma_file, cta_file, dwi_file, dwi_bbox_file, out_pid_dir, False)
             
             
         except Exception as e:
@@ -157,6 +206,21 @@ def elastix_register_images_multi_task(data_root, out_dir, process_num=6, reuse=
 def test_elastix_register_images_multi_task():
     data_root = '/data/medical/brain/gan/cta2dwi_multi_classified/4.cropped_nii'
     out_dir = '/data/medical/brain/gan/cta2dwi_multi_classified/4.registration_batch'   
+    data_root = '/data/medical/brain/gan/cta2dwi_history_neg/4.cropped_nii'
+    out_dir = '/data/medical/brain/gan/cta2dwi_history_neg/4.registration_batch' 
+    data_root = '/data/medical/brain/gan/cta2dwi_history_pos/4.cropped_nii'
+    out_dir = '/data/medical/brain/gan/cta2dwi_history_pos/4.registration_batch'      
+
+    data_root = '/data/medical/brain/gan/cta2dwi_history_pos/3.sorted_mask'
+    out_dir = '/data/medical/brain/gan/cta2dwi_history_pos/4.registration_batch_2d'      
+    # data_root = '/data/medical/brain/gan/cta2dwi_history_neg/3.sorted_mask'
+    # out_dir = '/data/medical/brain/gan/cta2dwi_history_neg/4.registration_batch_2d'    
+
+    data_root = '/data/medical/brain/gan/cta2dwi_history_pos/3.sorted_mask'
+    out_dir = '/data/medical/brain/gan/cta2dwi_history_pos/4.registration_batch_2d_parenchyma'      
+    data_root = '/data/medical/brain/gan/cta2dwi_history_neg/3.sorted_mask'
+    out_dir = '/data/medical/brain/gan/cta2dwi_history_neg/4.registration_batch_2d_parenchyma'      
+
     os.makedirs(out_dir, exist_ok=True)    
     elastix_register_images_multi_task(data_root, out_dir, 6, reuse=True)
 

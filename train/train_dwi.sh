@@ -5,7 +5,7 @@ CUDA_VISIBLE_DEVICES=1,3 python -m torch.distributed.launch \
 --nnodes=1 \
 --use_env \
 train.py \
---dataroot /data/medical/brain/gan/cta2dwi_multi_classified/5.train_batch \
+--dataroot /data/medical/brain/gan/cta2dwi_all_2d_parenchyma/5.train_batch_2d_parenchyma \
 --model pix2pix_3d \
 --input_nc 1 \
 --output_nc 1 \
@@ -24,10 +24,10 @@ train.py \
 --print_freq=10 \
 --save_epoch_freq=10 \
 --lr_policy cosine \
---lr 1e-4 \
+--lr 2e-4 \
 --checkpoints_dir /data/medical/brain/gan/cta2dwi_multi_classified/checkpoints \
 --name cta2dwi_sr \
---crop_size 384 384 160 \
+--crop_size 352 352 192 \
 --src_pattern fixed_cta.nii.gz \
 --dst_pattern registried_dwi_parenchyma.nii.gz \
 --mask_pattern final_mask.nii.gz \
