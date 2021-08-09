@@ -167,7 +167,7 @@ def step_1_check_folder_format(root, out_root):
                     
                     if len(pairs_modalities) != 2:
                         print(pid_path)
-                except Error as e:
+                except Exception as e:
                     print('Error case:\t', pid)
 
 def convert_dcm_to_nii(in_root, out_root):
@@ -677,6 +677,7 @@ def remove_error_pairs(data_root):
         patient_path = os.path.join(data_root, pid)
         if pid not in error_list:
             continue
+        print('remove\t', pid)
         shutil.rmtree(patient_path)
 
 
@@ -686,4 +687,5 @@ if __name__ == '__main__':
 
     # data_preprocessing()
     # data_preprocessing_batch1()
-    remove_error_pairs('/data/medical/brain/gan/cta2dwi_all_2d_parenchyma/5.train_batch_2d_parenchyma')
+    # remove_error_pairs('/data/medical/brain/gan/cta2dwi_all_2d_parenchyma/5.train_batch_2d_parenchyma')
+    remove_error_pairs('/ssd/zhangwd/cta2mbf/cta2dwi_all_2d_parenchyma/5.train_batch_2d_parenchyma')
