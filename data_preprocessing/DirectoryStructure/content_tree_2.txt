@@ -1,0 +1,63 @@
+.
+├── content_tree_2.txt
+├── content.txt
+├── cta2dwi
+│   ├── Atlas-crec-CTA-ASPECT
+│   ├── case_178_forHuang
+│   ├── case_178_forHuang_rescale
+│   ├── case_178_forHuang_rescale_256
+│   ├── cta_dwi_pairs1
+│   ├── experiment_data1
+│   └── experiment_registration1
+├── cta2dwi_all
+│   └── 5.train_batch
+├── cta2dwi_all_2d_parenchyma
+│   ├── 5.train_batch_2d_parenchyma
+│   ├── 6.inference_352x352x192_eval
+│   └── checkpoints
+├── cta2dwi_history_neg
+│   ├── 0.raw_dcm_neg
+│   ├── 3.sorted_mask
+│   ├── 3.sorted_nii
+│   ├── 4.cropped_nii
+│   ├── 4.registration_batch
+│   ├── 4.registration_batch_2d
+│   ├── 4.registration_batch_2d_parenchyma
+│   ├── 5.train_batch
+│   ├── 5.train_batch_2d
+│   ├── 5.train_batch_2d_parenchyma
+│   ├── 6.mpr_2d
+│   └── 6.mpr_2d_parenchyma
+├── cta2dwi_history_pos
+│   ├── 0.raw_dcm
+│   ├── 3.sorted_mask
+│   ├── 3.sorted_nii
+│   ├── 4.cropped_nii
+│   ├── 4.registration_batch
+│   ├── 4.registration_batch_2d
+│   ├── 4.registration_batch_2d_parenchyma
+│   ├── 5.train_batch
+│   ├── 5.train_batch_2d
+│   ├── 5.train_batch_2d_parenchyma
+│   ├── 6.mpr
+│   ├── 6.mpr_2d
+│   ├── 6.mpr_2d_parenchyma
+│   └── pos_zip
+├── cta2dwi_multi_classified
+│   ├── 0.ori
+│   ├── 3.sorted_mask
+│   ├── 3.sorted_nii
+│   ├── 4.cropped_nii
+│   ├── 4.registration_batch
+│   ├── 5.train_batch
+│   ├── checkpoints
+│   └── ssl
+├── hospital_6 -> /fileser/zhangwd/handover/hospital_6
+├── hospital_6_multi -> /fileser/zhangwd/handover/brain/hospital_6_multi
+├── hospital_6_multi_classified
+│   └── CTA2DWI-多中心-20201102
+├── multi_center
+│   └── HXJ
+└── ssl
+
+57 directories, 3 files
