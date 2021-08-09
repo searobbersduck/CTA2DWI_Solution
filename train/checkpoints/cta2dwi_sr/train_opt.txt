@@ -1,0 +1,75 @@
+----------------- Options ---------------
+                      aug: GAN                           
+               batch_size: 1                             
+                    beta1: 0.5                           
+          checkpoints_dir: /ssd/zhangwd/cta2mbf/cta2dwi_all_2d_parenchyma/checkpoints	[default: ./checkpoints]
+           continue_train: True                          	[default: False]
+                crop_size: [352, 352, 192]               	[default: [128, 128, 128]]
+                 dataroot: /ssd/zhangwd/cta2mbf/cta2dwi_all_2d_parenchyma/5.train_batch_2d_parenchyma	[default: None]
+             dataset_mode: aligned                       
+                   device: cuda                          
+                direction: AtoB                          
+              display_env: main                          
+             display_freq: 10                            	[default: 400]
+               display_id: 0                             	[default: 1]
+            display_ncols: 4                             
+             display_port: 8901                          	[default: 8097]
+           display_server: 10.100.37.100                 	[default: http://localhost]
+          display_winsize: 256                           
+                 dist_url: env://                        
+              dst_pattern: registried_dwi_parenchyma.nii.gz	[default: cropped_mbf.nii.gz]
+              dst_vis_lut: None                          
+                dst_ww_wl: [400, 200]                    	[default: [150, 75]]
+                    epoch: latest                        
+              epoch_count: 1                             
+                 gan_mode: vanilla                       
+                  gpu_ids: 0                             
+           inference_mode: eval                          
+                init_gain: 0.02                          
+                init_type: normal                        
+                 input_nc: 1                             	[default: 3]
+                  isTrain: True                          	[default: None]
+                lambda_L1: 1.0                           	[default: 100.0]
+           lambda_L1_Mask: 2.0                           	[default: 0.05]
+                load_iter: 0                             	[default: 0]
+                load_size: 286                           
+                       lr: 0.0001                        	[default: 0.0002]
+           lr_decay_iters: 50                            
+                lr_policy: cosine                        	[default: linear]
+               mask_label: 1                             
+             mask_pattern: final_mask.nii.gz             	[default: None]
+         max_dataset_size: inf                           
+                    model: pix2pix_3d                    	[default: cycle_gan]
+                 n_epochs: 5000                          	[default: 100]
+           n_epochs_decay: 100                           
+               n_layers_D: 3                             
+                     name: cta2dwi_sr                    	[default: experiment_name]
+                      ndf: 8                             	[default: 64]
+                     netD: pixel                         	[default: basic]
+                     netG: resnet_6blocks                	[default: unet_256]
+                      ngf: 32                            	[default: 64]
+         no_discriminator: True                          	[default: False]
+               no_dropout: True                          	[default: False]
+                  no_flip: False                         
+                  no_html: False                         
+                     norm: batch                         
+              num_threads: 4                             
+                output_nc: 1                             	[default: 3]
+                    phase: train                         
+                pool_size: 0                             
+               preprocess: resize_and_crop               
+               print_freq: 10                            	[default: 100]
+             save_by_iter: False                         
+          save_epoch_freq: 10                            	[default: 5]
+         save_latest_freq: 5000                          
+           serial_batches: False                         
+              src_pattern: fixed_cta.nii.gz              	[default: cropped_cta.nii.gz]
+                src_ww_wl: [400, 40]                     
+                 ssl_arch: resnet10                      
+      ssl_pretrained_file: /data/medical/brain/gan/cta2dwi_multi_classified/ssl/checkpoint_3140.pth.tar	[default: None]
+                   ssl_sr: True                          	[default: False]
+                   suffix:                               
+         update_html_freq: 1000                          
+                  verbose: False                         
+               world_size: 4                             
+----------------- End -------------------
