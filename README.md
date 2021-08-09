@@ -11,11 +11,16 @@ The solution of generating from CTA image to DWI image
 忽然浪起，掀舞一叶白头翁。</br>
 堪笑兰台公子，未解庄生天籁，刚道有雌雄。</br>
 一点浩然气，千里快哉风。</bre>
----
 
+----
+<br><br>
 ## 数据
+----
+<br><br>
+## inference
 
-## 
-
+在训练集合中的数据
+![2491689](images/2491689.gif)
+![4582240](images/4582240.gif)
 
 

@@ -17,7 +17,7 @@ train.py \
 --norm batch \
 --display_server='10.100.37.100' \
 --display_port=8901 \
---display_id=0 \
+--display_id=1 \
 --lambda_L1=1 \
 --n_epochs=5000 \
 --display_freq=10 \
